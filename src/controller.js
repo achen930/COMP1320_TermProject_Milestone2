@@ -577,17 +577,56 @@ const controller = {
     `);
     response.end();
   },
-  uploadImages: (request, response) => {
-    response.writeHead(200, { 'Content-Type': 'text/html' });
-  /* response.end(`
-    <h2>Upload</h2>
-    <form action="/api/upload" enctype="multipart/form-data" method="post">
-      <div>Text field title: <input type="text" name="title" /></div>
-      <div>File: <input type="file" name="multipleFiles" multiple="multiple" /></div>
-      <input type="submit" value="Upload" />
-    </form>
-  `); */
-  },
+  uploadImages: async (request, response) => {
+    if (request.url === "/api/upload" && request.method.toLowerCase() === "post") {
+        // parse a file upload
+        const form = formidable({});
+        let fields;
+        let files;
+        let pngCount = 0;
+        try {
+            [fields, files] = await form.parse(req);
+        } catch (err) {
+            // example to check for a very specific error
+            if (err.code === formidableErrors.maxFieldsExceeded) {
+    
+            }
+            console.error(err);
+            response.writeHead(err.httpCode || 400, { "Content-Type": "text/plain" });
+            response.end(String(err));
+            return;
+        }
+        
+        const filePromises = files.map(async(file) => {
+            const oldPath = file.path;
+            const fileExt = path.extname(file.name);
+            pngCount++;
+            const newFileName = `pic${pngCount}${fileExt}`;
+            const newPath = path.join(__dirname, "uploads", newFileName);
+
+            try {
+                await fs.rename(oldPath, newPath);
+            } catch (renameError) {
+                console.log(renameError);
+                response.writeHead(500, { "Content-Type": "text/plain" });
+                response.end("Internal Server Error");
+                return;
+            }
+            return newFileName;
+        });
+
+        try {
+            const newFileNames = await Promise.all(filePromises);
+            response.writeHead(200, { "Content-Type": "application/json" });
+            response.end(JSON.stringify({ fields, files }, null, 2));
+        } catch (error) {
+            console.log(error);
+            response.writeHead(500, { "Content-Type": "text/plain" });
+            response.end("Internal Server Error");
+        }
+        return;
+      }
+  }
 };
 
 module.exports = controller;

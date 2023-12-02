@@ -5,20 +5,14 @@ const { createReadStream } = require("fs");
 const path = require("path");
 
 const allRoutes = {
-  // // POST
-  // "/api/upload": (request, response) => {
-  //   controller.sendUpload(request, response);
-  // },
+  // POST
+  "/api/upload": (request, response) => {
+    controller.uploadImages(request, response);
+  },
   // GET: localhost:3000/
   "/:get": (request, response) => {
     controller.getHomePage(request, response);
   },
-  // "/photos/john123/profile.jpeg:get": (request, response) => {
-  //   createReadStream("./photos/john123/profile.jpeg").pipe(response);
-  // },
-  // "/photos/sandra123/profile.jpeg:get": (request, response) => {
-  //   createReadStream("./photos/sandra123/profile.jpeg").pipe(response);
-  // },
   "/photos:get": (request, response) => {
     controller.getImage(request, response);
   },
@@ -27,9 +21,9 @@ const allRoutes = {
     controller.sendFormData(request, response);
   },
   // POST: localhost:3000/images
-  "/images:post": (request, response) => {
-    controller.uploadImages(request, response);
-  },
+  // "/images:post": (request, response) => {
+  //   controller.uploadImages(request, response);
+  // },
   // GET: localhost:3000/feed
   // Shows instagram profile for a given user
   "/feed:get": (request, response) => {
