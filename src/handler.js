@@ -50,8 +50,8 @@ function handler(request, response) {
 
   const { pathname } = parse(url, true);
 
-  const urlSplitArr = request.url.split("/")
-  const user = urlSplitArr[2];
+  const urlSplitArray = request.url.split("/")
+  const user = urlSplitArray[2];
   
   let mimetype = "";
   if (path.extname(pathname) === ".jpeg" || path.extname(pathname) === ".png") {
@@ -60,12 +60,14 @@ function handler(request, response) {
     } else {
       mimetype = "image/png";
     }
+    
+    response.writeHead(200, {"Content-Type": mimetype});
 
     const directoryPath = `./photos/${user}/`;
 
     // Create read stream based on user and file extension
     const filePath = path.join(directoryPath, path.basename(pathname));
-    createReadStream(filePath).pipe(response);
+    return Promise.resolve(createReadStream(filePath).pipe(response));
   }
 
   const key = `${pathname}:${method.toLowerCase()}`;

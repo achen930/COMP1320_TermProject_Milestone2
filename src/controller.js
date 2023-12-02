@@ -1,5 +1,4 @@
 const fs = require("fs/promises");
-const { createReadStream } = require("fs");
 const { DEFAULT_HEADER } = require("./util/util");
 const path = require("path");
 var qs = require("querystring");
@@ -11,6 +10,7 @@ const controller = {
     const usersArray = JSON.parse(database);
     // construct HTML based on info from usersArray
     let userCard = "";
+    console.log(usersArray)
     
     usersArray.forEach((user) => {
         let usernameCurrent = "";
@@ -18,11 +18,12 @@ const controller = {
         userCard += `
             <div>
             <img src="/photos/${usernameCurrent}/profile.jpeg" alt="Profile Photo for ${usernameCurrent}">
+            <form action="/images" method="post" enctype="multipart/form-data">
+                <input type="file" id="selectedFile" style="display: none;" />
+                <input type="button" value="Upload" onclick="document.getElementById('selectedFile').click();" />
+            </form>
             <form action="/feed" method="get">
                 <input type="submit" name="username" value="${usernameCurrent}">
-            </form>
-            <form action="/images" method="post">
-                <input type="submit" value="Upload">
             </form>
             </div>
         `;
@@ -38,10 +39,41 @@ const controller = {
           </head>
           <body>
           <style>
+            body {
+                font-family: "Open Sans", Arial, sans-serif;
+            }
+            html {
+                background-color: #FAF9F6;
+                z-index: -1;
+            }
+            body {
+                margin: 50px;
+            }
+            div {
+                background-color: white;
+                width: 250px;
+                height: 80px;
+                padding: 10px;
+                border-radius: 3%;
+                margin-bottom: 20px;
+            }
+            input {
+                width: 140px;
+                text-align: center;
+                font-size: 1.1rem;
+                line-height: 1.6;
+                border: 0.1rem solid #dbdbdb;
+                border-radius: 0.3rem;
+                padding: 0 20px;
+                margin: 0.1rem 10px 0 0;
+                position: relative;
+                left: 100px;
+                bottom: 75px;
+            }
             img {
-                // border-radius: 50%;
-                width: 200px;
-                height: 200px;
+                border-radius: 50%;
+                width: 80px;
+                height: 80px;
             }
           </style>
           <h1>Users</h1>
@@ -72,13 +104,39 @@ const controller = {
     
     let userBio = "";
     let stats = "";
-    usersArray.forEach((element) => {
-        if (element.username === user.username) {
-            userBio = element.description;
-            stats = element.stats;
-            console.log(stats);
+    let galleryItems = "";
+
+    const requestedUsername = user.username;
+
+    usersArray.forEach((user) => {
+        let usernameCurrent = user.username;
+
+        // Check if the current user matches the requested user
+        if (usernameCurrent === requestedUsername) {
+            const baseDirectory = "./photos/";
+
+            user.photos.forEach((photo, index) => {
+                const photoPath = path.join(baseDirectory, usernameCurrent, photo);
+
+                galleryItems += `
+                    <div class="gallery-item" tabindex="${index + 1}">
+                        <img src="${photoPath}" class="gallery-image" alt="">
+                        <div class="gallery-item-info">
+                            <ul>
+                                <li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 0</li>
+                                <li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 0</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            });
+
+            userBio = user.description;
+            stats = user.stats;
+
+            return;
         }
-    })
+    });
 
     response.write(`
     <html>
@@ -501,227 +559,11 @@ const controller = {
 
 <main>
 
-	<div class="container">
-
-		<div class="gallery">
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1497445462247-4330a224fdb1?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 56</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 2</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1497445462247-4330a224fdb1?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 89</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 5</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-type">
-
-					<span class="visually-hidden">Gallery</span><i class="fas fa-clone" aria-hidden="true"></i>
-
-				</div>
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 42</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 1</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1502630859934-b3b41d18206c?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-type">
-
-					<span class="visually-hidden">Video</span><i class="fas fa-video" aria-hidden="true"></i>
-
-				</div>
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 38</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 0</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1498471731312-b6d2b8280c61?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-type">
-
-					<span class="visually-hidden">Gallery</span><i class="fas fa-clone" aria-hidden="true"></i>
-
-				</div>
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 47</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 1</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1515023115689-589c33041d3c?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 94</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 3</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1504214208698-ea1916a2195a?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-type">
-
-					<span class="visually-hidden">Gallery</span><i class="fas fa-clone" aria-hidden="true"></i>
-
-				</div>
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 52</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 4</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1515814472071-4d632dbc5d4a?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 66</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 2</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1511407397940-d57f68e81203?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-type">
-
-					<span class="visually-hidden">Gallery</span><i class="fas fa-clone" aria-hidden="true"></i>
-
-				</div>
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 45</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 0</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1518481612222-68bbe828ecd1?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 34</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 1</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1505058707965-09a4469a87e4?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 41</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 0</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-			<div class="gallery-item" tabindex="0">
-
-				<img src="https://images.unsplash.com/photo-1423012373122-fff0a5d28cc9?w=500&h=500&fit=crop" class="gallery-image" alt="">
-
-				<div class="gallery-item-type">
-
-					<span class="visually-hidden">Video</span><i class="fas fa-video" aria-hidden="true"></i>
-
-				</div>
-
-				<div class="gallery-item-info">
-
-					<ul>
-						<li class="gallery-item-likes"><span class="visually-hidden">Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> 30</li>
-						<li class="gallery-item-comments"><span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> 2</li>
-					</ul>
-
-				</div>
-
-			</div>
-
-		</div>
+<div class="container">
+<div class="gallery">
+    ${galleryItems}
+</div>
+</div>
 		<!-- End of gallery -->
 
 		<div class="loader"></div>
@@ -735,26 +577,16 @@ const controller = {
     `);
     response.end();
   },
-//   getImage: (request, response) => {
-//     console.log("here")
-//     //display image
-    
-//     imageStream;
-//     response.writeHead(200, { 'Content-Type': `${mimetype}` });
-//   response.end(`
-// hello
-//   `);
-//   },
   uploadImages: (request, response) => {
     response.writeHead(200, { 'Content-Type': 'text/html' });
-  response.end(`
-    <h2>With Node.js <code>"http"</code> module</h2>
+  /* response.end(`
+    <h2>Upload</h2>
     <form action="/api/upload" enctype="multipart/form-data" method="post">
       <div>Text field title: <input type="text" name="title" /></div>
       <div>File: <input type="file" name="multipleFiles" multiple="multiple" /></div>
       <input type="submit" value="Upload" />
     </form>
-  `);
+  `); */
   },
 };
 
