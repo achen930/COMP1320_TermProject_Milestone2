@@ -21,9 +21,9 @@ const allRoutes = {
     controller.sendFormData(request, response);
   },
   // POST: localhost:3000/images
-  // "/images:post": (request, response) => {
-  //   controller.uploadImages(request, response);
-  // },
+  "/images:post": (request, response) => {
+    controller.uploadImages(request, response);
+  },
   // GET: localhost:3000/feed
   // Shows instagram profile for a given user
   "/feed:get": (request, response) => {

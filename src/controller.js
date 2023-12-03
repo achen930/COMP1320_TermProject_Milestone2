@@ -20,7 +20,7 @@ const controller = {
             <img src="/photos/${usernameCurrent}/profile.jpeg" alt="Profile Photo for ${usernameCurrent}">
             <form action="/images" method="post" enctype="multipart/form-data">
                 <input type="file" id="selectedFile" style="display: none;" />
-                <input type="button" value="Upload" onclick="document.getElementById('selectedFile').click();" />
+                <input type="button" value="Upload" onclick="document.getElementById('selectedFile').click();" onchange="form.submit()"/>
             </form>
             <form action="/feed" method="get">
                 <input type="submit" name="username" value="${usernameCurrent}">
@@ -578,7 +578,6 @@ const controller = {
     response.end();
   },
   uploadImages: async (request, response) => {
-    if (request.url === "/api/upload" && request.method.toLowerCase() === "post") {
         // parse a file upload
         const form = formidable({});
         let fields;
@@ -586,6 +585,10 @@ const controller = {
         let pngCount = 0;
         try {
             [fields, files] = await form.parse(req);
+            form.on("fileBegin", (formname, file) => {
+                form.emit("data", { name: "fileBegin", formname, value: file });
+                console.log("hi");
+            });
         } catch (err) {
             // example to check for a very specific error
             if (err.code === formidableErrors.maxFieldsExceeded) {
@@ -625,7 +628,6 @@ const controller = {
             response.end("Internal Server Error");
         }
         return;
-      }
   }
 };
 
