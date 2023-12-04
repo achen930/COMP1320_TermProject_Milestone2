@@ -2,7 +2,7 @@ const fs = require("fs/promises");
 const { DEFAULT_HEADER } = require("./util/util");
 const path = require("path");
 var qs = require("querystring");
-const formidable = require("formidable");
+const { formidable } = require("formidable");
 
 const controller = {
   getHomePage: async (request, response) => {
@@ -17,14 +17,14 @@ const controller = {
         usernameCurrent = user.username;
         userCard += `
             <div>
-            <img src="/photos/${usernameCurrent}/profile.jpeg" alt="Profile Photo for ${usernameCurrent}">
-            <form action="/images" method="post" enctype="multipart/form-data">
-                <input type="file" id="selectedFile" style="display: none;" />
-                <input type="button" value="Upload" onclick="document.getElementById('selectedFile').click();" onchange="form.submit()"/>
-            </form>
-            <form action="/feed" method="get">
-                <input type="submit" name="username" value="${usernameCurrent}">
-            </form>
+                <img src="/photos/${usernameCurrent}/profile.jpeg" alt="Profile Photo for ${usernameCurrent}">
+                <form action="/images" method="POST" enctype="multipart/form-data" id="${usernameCurrent}">
+                    <input type="file" id="selectedFile_${usernameCurrent}" name="${usernameCurrent}" style="display: none;" onchange="this.form.submit();" />
+                    <input type="button" value="Upload" onclick="document.getElementById('selectedFile_${usernameCurrent}').click();"/>
+                </form>
+                <form action="/feed" method="GET">
+                    <input type="submit" name="username" value="${usernameCurrent}">
+                </form>
             </div>
         `;
     });
@@ -584,50 +584,55 @@ const controller = {
         let files;
         let pngCount = 0;
         try {
-            [fields, files] = await form.parse(req);
             form.on("fileBegin", (formname, file) => {
-                form.emit("data", { name: "fileBegin", formname, value: file });
+                console.log(formname)
                 console.log("hi");
+                console.log(file.originalFilename)
+                console.log(file.filepath)
+                file.filepath = `./photos/${formname}/${file.originalFilename}`;
+                console.log(file.filepath)
+                //form.emit("data", { name: "fileBegin", formname, value: file });
             });
+            [fields, files] = await form.parse(request);
         } catch (err) {
             // example to check for a very specific error
-            if (err.code === formidableErrors.maxFieldsExceeded) {
+            // if (err.code === formidableErrors.maxFieldsExceeded) {
     
-            }
+            // }
             console.error(err);
             response.writeHead(err.httpCode || 400, { "Content-Type": "text/plain" });
             response.end(String(err));
             return;
         }
         
-        const filePromises = files.map(async(file) => {
-            const oldPath = file.path;
-            const fileExt = path.extname(file.name);
-            pngCount++;
-            const newFileName = `pic${pngCount}${fileExt}`;
-            const newPath = path.join(__dirname, "uploads", newFileName);
+        // const filePromises = Object.values(files).map(async(file) => {
+        //     const oldPath = file.path;
+        //     const fileExt = path.extname(file.name);
+        //     pngCount++;
+        //     const newFileName = `pic${pngCount}${fileExt}`;
+        //     const newPath = path.join(__dirname, "uploads", newFileName);
 
-            try {
-                await fs.rename(oldPath, newPath);
-            } catch (renameError) {
-                console.log(renameError);
-                response.writeHead(500, { "Content-Type": "text/plain" });
-                response.end("Internal Server Error");
-                return;
-            }
-            return newFileName;
-        });
+        //     try {
+        //         await fs.rename(oldPath, newPath);
+        //     } catch (renameError) {
+        //         console.log(renameError);
+        //         response.writeHead(500, { "Content-Type": "text/plain" });
+        //         response.end("Internal Server Error");
+        //         return;
+        //     }
+        //     return newFileName;
+        // });
 
-        try {
-            const newFileNames = await Promise.all(filePromises);
-            response.writeHead(200, { "Content-Type": "application/json" });
-            response.end(JSON.stringify({ fields, files }, null, 2));
-        } catch (error) {
-            console.log(error);
-            response.writeHead(500, { "Content-Type": "text/plain" });
-            response.end("Internal Server Error");
-        }
-        return;
+        // try {
+        //     const newFileNames = await Promise.all(filePromises);
+        //     response.writeHead(200, { "Content-Type": "application/json" });
+        //     response.end(JSON.stringify({ fields, files }, null, 2));
+        // } catch (error) {
+        //     console.log(error);
+        //     response.writeHead(500, { "Content-Type": "text/plain" });
+        //     response.end("Internal Server Error");
+        // }
+        // return;
   }
 };
 
