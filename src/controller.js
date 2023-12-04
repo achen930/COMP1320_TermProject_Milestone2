@@ -582,6 +582,7 @@ const controller = {
         const form = formidable({});
         let fields;
         let files;
+        let currentUser;
         let pngCount = 0;
         try {
             form.on("fileBegin", (formname, file) => {
