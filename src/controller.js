@@ -4,83 +4,109 @@ const path = require("path");
 var qs = require("querystring");
 const { formidable } = require("formidable");
 
+
+const readDatabase = async (filePath) => {
+    try {
+        const database = await fs.readFile("../database/data.json", "utf8");
+        return JSON.parse(database);
+    } catch (error) {
+        console.log(`Error reading database: ${error.message}`);
+        throw error;
+    }
+};
+
+const writeDatabase = async (filePath, data) => {
+    try {
+        await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+    } catch (error) {
+        console.error(`Error writing to database: ${error.message}`);
+        throw error;
+    }
+};
+
 const controller = {
-  getHomePage: async (request, response) => {
-    const database = await fs.readFile("../database/data.json", "utf8");
-    const usersArray = JSON.parse(database);
-    // construct HTML based on info from usersArray
-    let userCard = "";
-    console.log(usersArray)
-    
-    usersArray.forEach((user) => {
-        let usernameCurrent = "";
-        usernameCurrent = user.username;
-        userCard += `
-            <div>
-                <img src="/photos/${usernameCurrent}/profile.jpeg" alt="Profile Photo for ${usernameCurrent}">
-                <form action="/images" method="POST" enctype="multipart/form-data" id="${usernameCurrent}">
-                    <input type="file" id="selectedFile_${usernameCurrent}" name="${usernameCurrent}" style="display: none;" onchange="this.form.submit();" />
-                    <input type="button" value="Upload" onclick="document.getElementById('selectedFile_${usernameCurrent}').click();"/>
-                </form>
-                <form action="/feed" method="GET">
-                    <input type="submit" name="username" value="${usernameCurrent}">
-                </form>
-            </div>
-        `;
-    });
-    
-    response.end(`
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Home</title>
-          </head>
-          <body>
-          <style>
-            body {
-                font-family: "Open Sans", Arial, sans-serif;
-            }
-            html {
-                background-color: #FAF9F6;
-                z-index: -1;
-            }
-            body {
-                margin: 50px;
-            }
-            div {
-                background-color: white;
-                width: 250px;
-                height: 80px;
-                padding: 10px;
-                border-radius: 3%;
-                margin-bottom: 20px;
-            }
-            input {
-                width: 140px;
-                text-align: center;
-                font-size: 1.1rem;
-                line-height: 1.6;
-                border: 0.1rem solid #dbdbdb;
-                border-radius: 0.3rem;
-                padding: 0 20px;
-                margin: 0.1rem 10px 0 0;
-                position: relative;
-                left: 100px;
-                bottom: 75px;
-            }
-            img {
-                border-radius: 50%;
-                width: 80px;
-                height: 80px;
-            }
-          </style>
-          <h1>Users</h1>
-          ${userCard}
-        </body>
-      </html>
-    `);
+
+    getHomePage: async (request, response) => {
+        // construct HTML based on info from usersArray
+        try {
+            const databaseFilePath = "../database/data.json";
+            const usersArray = await readDatabase(databaseFilePath);
+            let userCard = "";
+            console.log(usersArray)
+            
+            usersArray.forEach((user) => {
+                let usernameCurrent = "";
+                usernameCurrent = user.username;
+                userCard += `
+                    <div>
+                        <img src="/photos/${usernameCurrent}/profile.jpeg" alt="Profile Photo for ${usernameCurrent}">
+                        <form action="/images" method="POST" enctype="multipart/form-data" id="${usernameCurrent}">
+                            <input type="file" id="selectedFile_${usernameCurrent}" name="${usernameCurrent}" style="display: none;" accept="image/png" onchange="this.form.submit();" />
+                            <input type="button" value="Upload" onclick="document.getElementById('selectedFile_${usernameCurrent}').click();"/>
+                        </form>
+                        <form action="/feed" method="GET">
+                            <input type="submit" name="username" value="${usernameCurrent}">
+                        </form>
+                    </div>
+                `;
+            });
+            
+            response.end(`
+              <!DOCTYPE html>
+              <html lang="en">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>Home</title>
+                  </head>
+                  <body>
+                  <style>
+                    body {
+                        font-family: "Open Sans", Arial, sans-serif;
+                    }
+                    html {
+                        background-color: #FAF9F6;
+                        z-index: -1;
+                    }
+                    body {
+                        margin: 50px;
+                    }
+                    div {
+                        background-color: white;
+                        width: 250px;
+                        height: 80px;
+                        padding: 10px;
+                        border-radius: 3%;
+                        margin-bottom: 20px;
+                    }
+                    input {
+                        width: 140px;
+                        text-align: center;
+                        font-size: 1.1rem;
+                        line-height: 1.6;
+                        border: 0.1rem solid #dbdbdb;
+                        border-radius: 0.3rem;
+                        padding: 0 20px;
+                        margin: 0.1rem 10px 0 0;
+                        position: relative;
+                        left: 100px;
+                        bottom: 75px;
+                    }
+                    img {
+                        border-radius: 50%;
+                        width: 80px;
+                        height: 80px;
+                    }
+                  </style>
+                  <h1>Users</h1>
+                  ${userCard}
+                </body>
+              </html>
+            `);
+        } catch (error) {
+            console.log(`Error in getHomePage: ${error.message}`);
+            response.status(500).json({ error: "Internal Server Error" });
+        }
   },
   sendFormData: (request, response) => {
     var body = "";
@@ -583,57 +609,48 @@ const controller = {
         let fields;
         let files;
         let currentUser;
-        let pngCount = 0;
+        let originalFilename;
         try {
             form.on("fileBegin", (formname, file) => {
                 console.log(formname)
-                console.log("hi");
                 console.log(file.originalFilename)
                 console.log(file.filepath)
                 file.filepath = `./photos/${formname}/${file.originalFilename}`;
                 console.log(file.filepath)
-                //form.emit("data", { name: "fileBegin", formname, value: file });
+            });
+            form.on("end", async () => {
+                // add filename to database
+                try {
+                    let databaseFilePath = "../database/data.json";
+                    const usersArray = await readDatabase(databaseFilePath);
+                    const username = fields.username;
+                    const user = usersArray.find(u => u.username === username);
+            
+                    if (user) {
+                        // Add the filename to the user's array of photos
+                        user.photos.push(originalFilename);
+                        await writeDatabase(databaseFilePath, usersArray);
+            
+                        response.writeHead(200, { "Content-Type": "application/json" });
+                        response.end(JSON.stringify({ message: "File uploaded successfully." }));
+                    } else {
+                        // User not found
+                        response.writeHead(404, { "Content-Type": "application/json" });
+                        response.end(JSON.stringify({ error: "User not found." }));
+                    }
+                } catch (error) {
+                    console.error(`Error handling form end: ${error.message}`);
+                    response.writeHead(500, { "Content-Type": "application/json" });
+                    response.end(JSON.stringify({ error: "Internal Server Error" }));
+                }
             });
             [fields, files] = await form.parse(request);
         } catch (err) {
-            // example to check for a very specific error
-            // if (err.code === formidableErrors.maxFieldsExceeded) {
-    
-            // }
             console.error(err);
             response.writeHead(err.httpCode || 400, { "Content-Type": "text/plain" });
             response.end(String(err));
             return;
         }
-        
-        // const filePromises = Object.values(files).map(async(file) => {
-        //     const oldPath = file.path;
-        //     const fileExt = path.extname(file.name);
-        //     pngCount++;
-        //     const newFileName = `pic${pngCount}${fileExt}`;
-        //     const newPath = path.join(__dirname, "uploads", newFileName);
-
-        //     try {
-        //         await fs.rename(oldPath, newPath);
-        //     } catch (renameError) {
-        //         console.log(renameError);
-        //         response.writeHead(500, { "Content-Type": "text/plain" });
-        //         response.end("Internal Server Error");
-        //         return;
-        //     }
-        //     return newFileName;
-        // });
-
-        // try {
-        //     const newFileNames = await Promise.all(filePromises);
-        //     response.writeHead(200, { "Content-Type": "application/json" });
-        //     response.end(JSON.stringify({ fields, files }, null, 2));
-        // } catch (error) {
-        //     console.log(error);
-        //     response.writeHead(500, { "Content-Type": "text/plain" });
-        //     response.end("Internal Server Error");
-        // }
-        // return;
   }
 };
 
