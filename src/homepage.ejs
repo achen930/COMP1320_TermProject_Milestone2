@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Home</title>
+        </head>
+        <body>
+        <style>
+        body {
+            font-family: "Open Sans", Arial, sans-serif;
+        }
+        html {
+            background-color: #FAF9F6;
+            z-index: -1;
+        }
+        body {
+            margin: 50px;
+        }
+        div {
+            background-color: white;
+            width: 250px;
+            height: 80px;
+            padding: 10px;
+            border-radius: 3%;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 140px;
+            text-align: center;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            border: 0.1rem solid #dbdbdb;
+            border-radius: 0.3rem;
+            padding: 0 20px;
+            margin: 0.1rem 10px 0 0;
+            position: relative;
+            left: 100px;
+            bottom: 75px;
+        }
+        img {
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+        }
+        </style>
+        <h1>Users</h1>
+        <% users.forEach((user) => { %>
+        <div>
+            <img src="/photos/<%= user.username %>/profile.jpeg" alt="Profile Photo for <%= user.username %>">
+            <form action="/images" method="POST" enctype="multipart/form-data" id="<%= user.username %>">
+                <input type="file" id="selectedFile_<%= user.username %>" name="<%= user.username %>" style="display: none;" accept="image/png" onchange="this.form.submit();" />
+                <input type="button" value="Upload" onclick="document.getElementById('selectedFile_<%= user.username %>').click();"/>
+            </form>
+            <form action="/feed" method="GET">
+                <input type="submit" name="username" value="<%= user.username %>">
+            </form>
+        </div>
+        <% }); %>
+    </body>
+    </html>

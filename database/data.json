@@ -4,7 +4,7 @@
     "description": "welcome to my profile!",
     "username": "john123",
     "stats": {
-      "posts": 3,
+      "posts": 2,
       "followers": 30,
       "following": 30
     },
@@ -19,7 +19,7 @@
     "description": "Hi there!",
     "username": "sandra123",
     "stats": {
-      "posts": 3,
+      "posts": 2,
       "followers": 30,
       "following": 30
     },
@@ -27,19 +27,6 @@
     "photos": [
       "pic1.png",
       "pic2.png"
-    ]
-  },
-  {
-    "id": "cb506c7d-1c2f-4ce8-a56f-d45f16bf34cw",
-    "description": "Hi there!",
-    "username": "anson",
-    "stats": {
-      "posts": 2,
-      "followers": 100,
-      "following": 30
-    },
-    "profile": "profile.jpeg",
-    "photos": [
     ]
   }
 ]
